@@ -1,0 +1,149 @@
+pipeline { 
+    agent any 
+    
+	tools {
+		maven 'maven-3.9.11' //Check the version in Jenkins Global Tool Configuration
+		
+	}
+
+	environment {
+		COMPOSE_PATH = "${WORKSPACE}/Demo-Automation-Project/docker" // 🔁 Adjust if compose file is elsewhere
+        SELENIUM_GRID = "true"
+	} 
+	    
+    stages {
+
+		stage('Environment Setup') {
+
+		    	steps {
+	                script {
+						echo "checking installed versions..."
+						bat 'docker --version'
+						bat 'docker compose version'
+						bat 'mvn -version'
+						bat 'java -version'
+	                    bat "docker compose -f ${COMPOSE_PATH}\\docker-compose.yml up -d"
+	                    echo "Waiting for Selenium Grid to be ready..."
+	                    sleep 30 // Add a wait if needed
+	                    echo "Environment setup complete. COMPOSE_PATH set to ${COMPOSE_PATH}"
+	                }
+            	}
+	    }
+	    	
+        stage('Checkout Repository') {
+            steps {
+                git branch: 'master', url: 'https://github.com/tonysaha007/DemoProject.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                bat 'mvn clean install -f Demo-Automation-Project/pom.xml'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                bat 'mvn test -f Demo-Automation-Project/pom.xml'
+            }
+        }
+		stage('Stop Selenium Grid') {
+		            steps {
+		                script {
+		                    echo "Stopping Selenium Grid and removing containers..."
+		                    bat "docker compose -f ${COMPOSE_PATH}\\docker-compose.yml down" // Stop and remove containers
+		                }
+		            }
+		 }
+        stage('Publish Reports') {
+            steps {
+                publishHTML(target: [
+                    reportDir: 'Demo-Automation-Project/src/test/resources/ExtentReport',  
+                    reportFiles: 'ExtentReport.html',  
+                    reportName: 'Extent Spark Report'
+                ])
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: '**/Demo-Automation-Project/src/test/resources/ExtentReport/*.html', fingerprint: true
+            junit 'Demo-Automation-Project/target/surefire-reports/*.xml'
+            echo 'artifacts have been archived and test results published.'
+        }
+        
+        success {
+            echo 'The build was successful!'
+			emailext(
+			    to: 'tony.ez007@gmail.com',
+			    subject: "Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+			    body: """
+			    <html>
+ 				<body style="font-family: Arial, Helvetica, sans-serif; background-color:#f4f6f8; padding:20px;">
+			            <table align="center" width="600"
+						cellpadding="0" cellspacing="0"
+						style="background:#ffffff;
+						border:1px solid #dcdcdc;
+						border-radius:8px;
+						box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+			            <tr>
+			                <td style="padding:20px; text-align:center; background:#2ecc71; color:#ffffff; border-radius:8px 8px 0 0;">
+			                    <h2>Build Successful</h2>
+			                </td>
+			            </tr>
+			            <tr>
+			                <td style="padding:20px;">
+			                    <p>Hello <b>Automation Team</b>,</p>
+			
+			                    <p>The latest Jenkins build #${env.BUILD_NUMBER} has completed successfully.</p>
+			
+			                    <table width="100%" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+			                        <tr>
+			                            <td><b>Project Name</b></td>
+			                            <td>${env.JOB_NAME}</td>
+			                        </tr>
+			                        <tr>
+			                            <td><b>Build Number</b></td>
+			                            <td>#${env.BUILD_NUMBER}</td>
+			                        </tr>
+			                        <tr>
+			                            <td><b>Status</b></td>
+			                            <td style="color:#2ecc71;"><b>SUCCESS</b></td>
+			                        </tr>
+			                        <tr>
+			                            <td><b>Build URL</b></td>
+			                            <td>
+			                                <a href="${env.BUILD_URL}">${env.BUILD_URL}</a>
+			                            </td>
+			                        </tr>
+			                    </table>
+			
+			                    <p style="margin-top:20px;">
+			                        <b>Extent Report:</b><br/>
+			                        <a href="http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}/artifact/Demo-Automation-Project/src/test/resources/ExtentReport/ExtentReport.html">
+			                            Click here to view report
+			                        </a>
+			                    </p>
+			
+			                    <p style="margin-top:30px;">
+			                        Best regards,<br/>
+			                        <b>Web Automation Team</b>
+			                    </p>
+			                </td>
+			            </tr>
+			        </table>
+			    </body>
+			    </html>
+			    """,
+			    mimeType: 'text/html',
+			    attachLog: true,
+			    attachmentsPattern: 'Demo-Automation-Project/logs/app.log' // Adjust path as needed
+			)
+        }
+        
+        failure {
+            echo 'The build failed.'
+        }
+    }
+}
