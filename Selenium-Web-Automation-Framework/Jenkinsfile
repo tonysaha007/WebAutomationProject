@@ -7,10 +7,10 @@ pipeline {
 	}
 
 	environment {
+		PROJECT_FOLDER = "Selenium-Web-Automation-Framework" // ${PROJECT_FOLDER}
 		COMPOSE_PATH = "${WORKSPACE}/${PROJECT_FOLDER}/docker" // 🔁 Adjust if compose file is elsewhere
         SELENIUM_GRID = "true"
-        GitHub_REPO = "https://github.com/tonysaha007/TestProject.git"
-        PROJECT_FOLDER = "Web-Automation-Framework" // ${PROJECT_FOLDER}
+        GitHub_REPO = "https://github.com/tonysaha007/WebAutomationProject.git"
         
        	// https://github.com/repo.git // ${GitHub_REPO}
 		//	│
