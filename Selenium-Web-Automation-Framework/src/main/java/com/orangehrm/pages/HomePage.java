@@ -19,7 +19,7 @@ public class HomePage {
 	private By pimTab = By.xpath("//span[text()='PIM']");
 	private By employeeSearch = By.xpath("//label[text()='Employee Name']/parent::div/following-sibling::div/div/div/input");
 	private By searchButton = By.xpath("//button[@type='submit']");
-	private By emplFirstAndMiddleName = By.xpath("//div[@class='oxd-table-card']/div/div[3]"); //Some time fails
+	private By emplFirstAndMiddleName = By.xpath("//div[@class='oxd-table-card']/div/div[3]"); //Some time fails due to dynamic loading of employee name, so using alternative locator which is more stable
 	//private By emplFirstAndMiddleName = By.xpath("//div[contains(text(),'Tony')]"); //alternative locator to avoid test failure
 	
 	private By emplLastName = By.xpath("//div[@class='oxd-table-card']/div/div[4]");
