@@ -19,7 +19,9 @@ public class HomePage {
 	private By pimTab = By.xpath("//span[text()='PIM']");
 	private By employeeSearch = By.xpath("//label[text()='Employee Name']/parent::div/following-sibling::div/div/div/input");
 	private By searchButton = By.xpath("//button[@type='submit']");
-	private By emplFirstAndMiddleName = By.xpath("//div[@class='oxd-table-card']/div/div[3]");
+	//private By emplFirstAndMiddleName = By.xpath("//div[@class='oxd-table-card']/div/div[3]");
+	private By emplFirstAndMiddleName = By.xpath("//div[contains(text(),'Tony')]");
+	
 	private By emplLastName = By.xpath("//div[@class='oxd-table-card']/div/div[4]");
 
 	// Initialize the ActionDriver object by passing WebDriver instance
